@@ -25,7 +25,7 @@ resource "aws_codepipeline" "codepipeline" {
 
       configuration = {
         ConnectionArn    = aws_codestarconnections_connection.example.arn
-        FullRepositoryId = "my-organization/example"
+        FullRepositoryId = "https://github.com/mike-jianxin-mo/gosimple.git"
         BranchName       = "main"
       }
     }
