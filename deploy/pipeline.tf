@@ -26,7 +26,7 @@ resource "aws_codepipeline" "codepipeline" {
       configuration = {
         ConnectionArn    = aws_codestarconnections_connection.example.arn
         FullRepositoryId = "ci-cd-explorer/simple_gin"
-        BranchName       = "main"
+        BranchName       = "uat"
       }
     }
   }
@@ -72,7 +72,7 @@ resource "aws_codepipeline" "codepipeline" {
 }
 
 resource "aws_codestarconnections_connection" "example" {
-#   name          = "example-connection"
+  #   name          = "example-connection"
   name          = "gosimple_v2"
   provider_type = "Bitbucket"
 }
@@ -138,6 +138,21 @@ data "aws_iam_policy_document" "codepipeline_policy" {
 
     resources = ["*"]
   }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+      "kms:DescribeKey",
+    ]
+
+    # resources = ["arn:aws:kms:ap-southeast-1:236353575297:alias/simple-go-s3-key"]
+    resources = ["arn:aws:kms:ap-southeast-1:236353575297:key/80739609-dd2d-4db7-a852-9a5559f9d31e"]
+  }
 }
 
 resource "aws_iam_role_policy" "codepipeline_policy" {
@@ -147,5 +162,5 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
 }
 
 data "aws_kms_alias" "s3kmskey" {
-  name = "alias/myKmsKey"
+  name = "alias/simple-go-s3-key"
 }
