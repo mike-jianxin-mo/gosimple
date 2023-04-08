@@ -6,10 +6,10 @@ resource "aws_codepipeline" "codepipeline" {
     location = aws_s3_bucket.codepipeline_bucket.bucket
     type     = "S3"
 
-    # encryption_key {
-    #   id   = data.aws_kms_alias.s3kmskey.arn
-    #   type = "KMS"
-    # }
+    encryption_key {
+      id   = data.aws_kms_alias.s3kmskey.arn
+      type = "KMS"
+    }
   }
 
   stage {
@@ -25,7 +25,7 @@ resource "aws_codepipeline" "codepipeline" {
 
       configuration = {
         ConnectionArn    = aws_codestarconnections_connection.example.arn
-        FullRepositoryId = "https://github.com/mike-jianxin-mo/gosimple.git"
+        FullRepositoryId = "ci-cd-explorer/simple_gin"
         BranchName       = "main"
       }
     }
@@ -72,12 +72,13 @@ resource "aws_codepipeline" "codepipeline" {
 }
 
 resource "aws_codestarconnections_connection" "example" {
-  name          = "example-connection"
-  provider_type = "GitHub"
+#   name          = "example-connection"
+  name          = "gosimple_v2"
+  provider_type = "Bitbucket"
 }
 
 resource "aws_s3_bucket" "codepipeline_bucket" {
-  bucket = "test-bucket"
+  bucket = "mikemo-simple-go-app-ecs-test-bucket"
 }
 
 resource "aws_s3_bucket_acl" "codepipeline_bucket_acl" {
@@ -99,7 +100,7 @@ data "aws_iam_policy_document" "assume_role" {
 }
 
 resource "aws_iam_role" "codepipeline_role" {
-  name               = "test-role"
+  name               = "test-role-for-simple-go-app"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
@@ -145,6 +146,6 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
   policy = data.aws_iam_policy_document.codepipeline_policy.json
 }
 
-# data "aws_kms_alias" "s3kmskey" {
-#   name = "alias/myKmsKey"
-# }
+data "aws_kms_alias" "s3kmskey" {
+  name = "alias/myKmsKey"
+}
