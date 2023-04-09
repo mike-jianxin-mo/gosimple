@@ -1,0 +1,40 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - AWS_DEFAULT_REGION=ap-southeast-2
+      - AWS_ACCOUNT_ID=236353575297
+      - IMAGE_REPO_NAME=salems
+      - echo '$CODEBUILD_WEBHOOK_BASE_REF:' $CODEBUILD_WEBHOOK_BASE_REF
+      # - IMAGE_TAG=$(echo $CODEBUILD_WEBHOOK_BASE_REF | awk -F"/" '{print $2}')
+      - IMAGE_TAG=$BRANCH
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      # - rm -f ./configs/.env.local
+      # - sed -i "s|<DB_USER>|${DB_USER}|g" configs/.env
+      # - sed -i "s|<DB_PASS>|${DB_PASS}|g" configs/.env
+      # - sed -i "s|<DB_URL>|${DB_URL}|g" configs/.env
+      # - sed -i "s|<MS_PROJECT_URL>|${MS_PROJECT_URL}|g" configs/.env
+      # - sed -i "s|<MS_CUSTOMER_URL>|${MS_CUSTOMER_URL}|g" configs/.env
+      # - cat ./configs/.env
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - echo '$IMAGE_REPO_NAME:' $IMAGE_REPO_NAME
+      - echo '$IMAGE_TAG:' $IMAGE_TAG
+      - echo '$AWS_ACCOUNT_ID:' $AWS_ACCOUNT_ID
+      - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
+      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+      - echo Writing image definitions file...
+      - printf '[{"name":"salems-%s-container","imageUri":"%s"}]' $BRANCH $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG > imagedefinitions.json
+      - cat imagedefinitions.json
+artifacts:
+  files: imagedefinitions.json
